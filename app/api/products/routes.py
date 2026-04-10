@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, Product, Category
 from app.schemas import ProductSchema
-from flask_jwt_extended import jwt_required
+from app.utils.decorators import require_auth, admin_required
 
 products_bp = Blueprint('products', __name__)
 product_schema = ProductSchema()
 products_schema = ProductSchema(many=True)
 
 @products_bp.route('/', methods=['GET'])
-@jwt_required()
+@require_auth()
 def get_products():
     """Get list of products with Pagination and Filtering"""
     page = request.args.get('page', 1, type=int)
@@ -30,7 +30,7 @@ def get_products():
     }), 200
 
 @products_bp.route('/', methods=['POST'])
-@jwt_required()
+@admin_required()
 def add_product():
     """Create a new product with validation"""
     data = request.get_json() or {}
@@ -63,7 +63,7 @@ def add_product():
         return jsonify({"error": "Database Error", "message": "Could not save product."}), 500
 
 @products_bp.route('/<int:id>', methods=['PUT'])
-@jwt_required()
+@admin_required()
 def update_product(id):
     """Update a product with specific feedback"""
     product = Product.query.get(id)
@@ -92,7 +92,7 @@ def update_product(id):
         return jsonify({"error": "Database Error", "message": "Could not update product."}), 500
 
 @products_bp.route('/<int:id>', methods=['DELETE'])
-@jwt_required()
+@admin_required()
 def delete_product(id):
     """Delete a product"""
     product = Product.query.get(id)

@@ -3,7 +3,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+import secrets
+
 db = SQLAlchemy()
+
+def generate_api_key():
+    """Generate a secure random API key"""
+    return secrets.token_urlsafe(32)
 
 class User(UserMixin, db.Model):
     __tablename__ = 'users'
@@ -15,6 +21,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), default='staff') # 'admin', 'manager', 'staff'
+    api_key = db.Column(db.String(64), unique=True, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_password(self, password):

@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, Stock, Product, Branch
-from flask_jwt_extended import jwt_required
+from app.utils.decorators import require_auth
 
 inventory_bp = Blueprint('inventory', __name__)
 
 @inventory_bp.route('/transaction', methods=['POST'])
-@jwt_required()
+@require_auth()
 def stock_transaction():
     """Record Stock In or Stock Out with detailed validation"""
     data = request.get_json() or {}
@@ -98,7 +98,7 @@ def stock_transaction():
         }), 500
 
 @inventory_bp.route('/levels', methods=['GET'])
-@jwt_required()
+@require_auth()
 def get_stock_levels():
     """Get current stock levels with branch info"""
     branch_id = request.args.get('branch_id', type=int)

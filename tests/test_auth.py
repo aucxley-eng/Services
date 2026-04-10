@@ -2,6 +2,8 @@ import unittest
 import json
 import os
 from app import create_app, db
+from models import User, generate_api_key
+
 
 class AuthTests(unittest.TestCase):
     def setUp(self):
@@ -13,7 +15,6 @@ class AuthTests(unittest.TestCase):
         self.client = self.app.test_client()
         
         with self.app.app_context():
-            from app.models import User, Product, Branch, Category, Supplier, Stock, Order
             db.drop_all()
             db.create_all()
 
@@ -34,13 +35,11 @@ class AuthTests(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data)
-        self.assertEqual(data['message'], "User created successfully")
+        self.assertEqual(data['message'], "User registered successfully")
         self.assertEqual(data['user']['username'], "testuser")
-        self.assertEqual(data['user']['first_name'], "Test")
-        self.assertEqual(data['user']['last_name'], "User")
+        self.assertIn('api_key', data['user'])
 
-    def test_duplicate_registration(self):
-        # Register first user
+    def test_duplicate_username(self):
         self.client.post('/api/auth/register', 
             data=json.dumps({
                 "username": "testuser",
@@ -51,8 +50,22 @@ class AuthTests(unittest.TestCase):
             }), 
             content_type='application/json'
         )
-        # Try to register same user again
         response = self.client.post('/api/auth/register', 
+            data=json.dumps({
+                "username": "testuser",
+                "first_name": "Test2",
+                "last_name": "User2",
+                "email": "test2@example.com",
+                "password": "password123"
+            }), 
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 409)
+        data = json.loads(response.data)
+        self.assertIn('already taken', data['message'])
+
+    def test_login(self):
+        self.client.post('/api/auth/register', 
             data=json.dumps({
                 "username": "testuser",
                 "first_name": "Test",
@@ -62,9 +75,19 @@ class AuthTests(unittest.TestCase):
             }), 
             content_type='application/json'
         )
-        self.assertEqual(response.status_code, 400)
+        
+        response = self.client.post('/api/auth/login', 
+            data=json.dumps({
+                "email": "test@example.com",
+                "password": "password123"
+            }), 
+            content_type='application/json'
+        )
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        self.assertEqual(data['message'], "User with this email or username already exists")
+        self.assertIn('api_key', data)
+        self.assertIn('user', data)
+
 
 if __name__ == '__main__':
     unittest.main()

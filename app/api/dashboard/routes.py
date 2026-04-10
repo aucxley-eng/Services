@@ -1,12 +1,12 @@
 from flask import Blueprint, jsonify
 from sqlalchemy import func
 from app.models import db, Product, Stock
-from flask_jwt_extended import jwt_required
+from app.utils.decorators import require_auth
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
 @dashboard_bp.route('/stats', methods=['GET'])
-@jwt_required()
+@require_auth()
 def get_stats():
     """
     Get Dashboard Statistics (Widgets)

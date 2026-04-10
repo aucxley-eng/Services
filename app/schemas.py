@@ -1,4 +1,4 @@
-from app import db
+from app.models import db
 from marshmallow import Schema, fields, validate, ValidationError
 
 # --- Validation Helpers ---

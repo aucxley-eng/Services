@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, Supplier
-from flask_jwt_extended import jwt_required
+from app.utils.decorators import require_auth
 
 suppliers_bp = Blueprint('suppliers', __name__)
 
 @suppliers_bp.route('/', methods=['GET'])
-@jwt_required()
+@require_auth()
 def get_suppliers():
     """Get all suppliers"""
     suppliers = Supplier.query.all()
@@ -21,7 +21,7 @@ def get_suppliers():
     return jsonify(output), 200
 
 @suppliers_bp.route('/', methods=['POST'])
-@jwt_required()
+@require_auth()
 def add_supplier():
     """Add a new supplier with validation"""
     data = request.get_json() or {}

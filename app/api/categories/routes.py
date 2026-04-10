@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
 from app.models import db, Category
-from flask_jwt_extended import jwt_required
+from app.utils.decorators import require_auth
 
 categories_bp = Blueprint('categories', __name__)
 
 @categories_bp.route('/', methods=['GET'])
-@jwt_required()
+@require_auth()
 def get_categories():
     """Get all categories"""
     categories = Category.query.all()
@@ -13,7 +13,7 @@ def get_categories():
     return jsonify(output), 200
 
 @categories_bp.route('/', methods=['POST'])
-@jwt_required()
+@require_auth()
 def add_category():
     """Create a new category with specific feedback"""
     data = request.get_json() or {}
