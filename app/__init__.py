@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
 from flasgger import Swagger
+from flask_jwt_extended import JWTManager
 from config import Config
 from database import db
 
@@ -10,6 +11,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     db.init_app(app)
+    JWTManager(app)
     
     CORS(app)
 
@@ -17,8 +19,8 @@ def create_app(config_class=Config):
         "headers": [],
         "specs": [
             {
-                "endpoint": 'apispec',
-                "route": '/apispec.json',
+                "endpoint": "apispec",
+                "route": "/apispec.json",
                 "rule_filter": lambda rule: True,
                 "model_filter": lambda tag: True,
             }
@@ -29,14 +31,19 @@ def create_app(config_class=Config):
     }
     Swagger(app, config=swagger_config)
 
-    from api import auth_bp, products_bp, inventory_bp, categories_bp, suppliers_bp, dashboard_bp
+    from app.auth.routes import auth_bp
+    # from app.products.routes import products_bp
+    # from app.inventory.routes import inventory_bp
+    # from app.categories.routes import categories_bp
+    # from app.suppliers.routes import suppliers_bp
+    # from app.dashboard.routes import dashboard_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(products_bp, url_prefix='/api/products')
-    app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
-    app.register_blueprint(categories_bp, url_prefix='/api/categories')
-    app.register_blueprint(suppliers_bp, url_prefix='/api/suppliers')
-    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    # app.register_blueprint(products_bp, url_prefix='/api/products')
+    # app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
+    # app.register_blueprint(categories_bp, url_prefix='/api/categories')
+    # app.register_blueprint(suppliers_bp, url_prefix='/api/suppliers')
+    # app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
     @app.errorhandler(400)
     def bad_request(e):
