@@ -1,7 +1,8 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flasgger import Swagger
 from flask_jwt_extended import JWTManager
+from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
 from config import Config
 from database import db
 
@@ -47,18 +48,57 @@ def create_app(config_class=Config):
 
     @app.errorhandler(400)
     def bad_request(e):
-        return jsonify(error="Bad Request", message=str(e.description)), 400
+        return jsonify({
+            "error": "Bad Request",
+            "message": str(e.description),
+            "details": "The request was malformed or invalid",
+            "solution": "Check your request body and headers"
+        }), 400
 
     @app.errorhandler(404)
     def not_found(e):
-        return jsonify(error="Not Found", message="The requested resource was not found on this server."), 404
+        return jsonify({
+            "error": "Not Found",
+            "message": str(e.description) if e.description else "The requested endpoint does not exist",
+            "details": f"Route {request.method} {request.path} not found",
+            "solution": "Check the API endpoint URL"
+        }), 404
 
     @app.errorhandler(405)
     def method_not_allowed(e):
-        return jsonify(error="Method Not Allowed", message="This method is not allowed for the requested URL."), 405
+        return jsonify({
+            "error": "Method Not Allowed",
+            "message": str(e.description) if e.description else "This method is not allowed",
+            "details": f"Method {request.method} not supported for this endpoint",
+            "solution": "Use the correct HTTP method (GET, POST, PUT, DELETE)"
+        }), 405
+
+    @app.errorhandler(NoAuthorizationError)
+    def handle_no_auth(e):
+        return jsonify({
+            "error": "Unauthorized",
+            "message": "Authorization required",
+            "details": "No JWT token was provided",
+            "solution": "Include 'Authorization: Bearer <token>' header"
+        }), 401
+
+    @app.errorhandler(InvalidHeaderError)
+    def handle_invalid_header(e):
+        return jsonify({
+            "error": "Unauthorized",
+            "message": "Invalid authorization header",
+            "details": str(e),
+            "solution": "Use format: 'Authorization: Bearer <token>'"
+        }), 401
 
     @app.errorhandler(500)
     def internal_error(e):
-        return jsonify(error="Internal Server Error", message="An unexpected error occurred on the server."), 500
+        error_msg = str(e.original) if hasattr(e, 'original') else str(e)
+        return jsonify({
+            "error": "Internal Server Error",
+            "message": "An unexpected error occurred",
+            "details": error_msg,
+            "solution": "Contact support or check server logs"
+        }), 500
 
     return app
