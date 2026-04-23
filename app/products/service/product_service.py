@@ -1,6 +1,5 @@
-from database import db
-from models import Product, Category
-from repositories import ProductRepository, CategoryRepository
+from app.products.repo import ProductRepository
+from app.categories.domain import CategoryRepository
 
 
 class ProductService:
@@ -11,25 +10,33 @@ class ProductService:
     def get_all_products(self, page=1, per_page=10, search=''):
         pagination = self.product_repo.get_all_paginated(page, per_page, search)
         return {
-            'products': pagination.items,
+            'products': [p.to_dict() for p in pagination.items],
             'total': pagination.total,
             'pages': pagination.pages,
             'current_page': page
         }
     
+    def get_product(self, product_id):
+        product = self.product_repo.get_by_id(product_id)
+        if not product:
+            return None, "Product not found"
+        return product.to_dict(), None
+    
     def create_product(self, data, current_user):
-        if current_user.role not in ['admin']:
-            return None, "Admin access required to create products."
-        
         required_fields = ['name', 'buying_price']
         missing = [field for field in required_fields if not data.get(field)]
         if missing:
             return None, f"Missing required fields: {', '.join(missing)}"
         
+        # Validate category if provided
         if data.get('category_id'):
             category = self.category_repo.get_by_id(data['category_id'])
             if not category:
                 return None, "The specified Category ID does not exist."
+        
+        # Check duplicate name
+        if self.product_repo.find_by_name(data['name']):
+            return None, f"A product with name '{data['name']}' already exists."
         
         try:
             product = self.product_repo.create(
@@ -41,18 +48,16 @@ class ProductService:
                 unit=data.get('unit', 'pcs'),
                 threshold=data.get('threshold', 10)
             )
-            return product, None
+            return product.to_dict(), None
         except Exception as e:
-            return None, "Could not save product."
+            return None, f"Could not save product: {str(e)}"
     
     def update_product(self, product_id, data, current_user):
-        if current_user.role not in ['admin']:
-            return None, "Admin access required to update products."
-        
         product = self.product_repo.get_by_id(product_id)
         if not product:
             return None, "Product not found."
         
+        # Validate category if provided
         if data.get('category_id'):
             category = self.category_repo.get_by_id(data['category_id'])
             if not category:
@@ -68,20 +73,17 @@ class ProductService:
                 'category_id': data.get('category_id', product.category_id)
             }
             product = self.product_repo.update(product, **update_data)
-            return product, None
+            return product.to_dict(), None
         except Exception as e:
-            return None, "Could not update product."
+            return None, f"Could not update product: {str(e)}"
     
     def delete_product(self, product_id, current_user):
-        if current_user.role not in ['admin']:
-            return None, "Admin access required to delete products."
-        
         product = self.product_repo.get_by_id(product_id)
         if not product:
             return None, "Product not found."
         
         try:
             self.product_repo.delete(product)
-            return product, None
-        except Exception:
-            return None, "Could not delete product."
+            return {"message": "Product deleted successfully"}, None
+        except Exception as e:
+            return None, f"Could not delete product: {str(e)}"

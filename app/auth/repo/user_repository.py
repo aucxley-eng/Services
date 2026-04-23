@@ -1,4 +1,4 @@
-from database import db, generate_api_key
+from database import db
 from app.auth.domain import User
 from app.auth.repo.base_repository import BaseRepository
 
@@ -26,7 +26,8 @@ class UserRepository(BaseRepository):
             last_name=kwargs.get('last_name'),
             email=kwargs.get('email'),
             role=kwargs.get('role', 'staff'),
-            api_key=generate_api_key()
+            branch_id=kwargs.get('branch_id'),
+            is_active=True
         )
         user.set_password(kwargs.get('password'))
         db.session.add(user)

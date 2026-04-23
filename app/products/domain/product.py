@@ -13,4 +13,16 @@ class Product(db.Model):
     threshold = db.Column(db.Integer, default=10)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     image_url = db.Column(db.String(255))
-    stocks = db.relationship('Stock', backref='product', lazy=True)
+    
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "product_id": self.product_id,
+            "name": self.name,
+            "buying_price": self.buying_price,
+            "selling_price": self.selling_price,
+            "unit": self.unit,
+            "threshold": self.threshold,
+            "category_id": self.category_id,
+            "image_url": self.image_url
+        }
