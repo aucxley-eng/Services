@@ -1,5 +1,5 @@
 from app.products.repo import ProductRepository
-from app.categories.domain import CategoryRepository
+from app.categories.repo import CategoryRepository
 
 
 class ProductService:
@@ -28,11 +28,23 @@ class ProductService:
         if missing:
             return None, f"Missing required fields: {', '.join(missing)}"
         
+        # Validate positive price
+        if data.get('buying_price', 0) < 0:
+            return None, "Buying price cannot be negative"
+        
         # Validate category if provided
         if data.get('category_id'):
             category = self.category_repo.get_by_id(data['category_id'])
             if not category:
                 return None, "The specified Category ID does not exist."
+        
+        # Validate supplier if provided
+        if data.get('supplier_id'):
+            from app.suppliers.repo import SupplierRepository
+            supplier_repo = SupplierRepository()
+            supplier = supplier_repo.get_by_id(data['supplier_id'])
+            if not supplier:
+                return None, "The specified Supplier ID does not exist."
         
         # Check duplicate name
         if self.product_repo.find_by_name(data['name']):
@@ -45,6 +57,7 @@ class ProductService:
                 selling_price=data.get('selling_price'),
                 product_id=data.get('product_id'),
                 category_id=data.get('category_id'),
+                supplier_id=data.get('supplier_id'),
                 unit=data.get('unit', 'pcs'),
                 threshold=data.get('threshold', 10)
             )
@@ -63,6 +76,14 @@ class ProductService:
             if not category:
                 return None, "Category does not exist."
         
+        # Validate supplier if provided
+        if data.get('supplier_id'):
+            from app.suppliers.repo import SupplierRepository
+            supplier_repo = SupplierRepository()
+            supplier = supplier_repo.get_by_id(data['supplier_id'])
+            if not supplier:
+                return None, "Supplier does not exist."
+        
         try:
             update_data = {
                 'name': data.get('name', product.name),
@@ -70,7 +91,8 @@ class ProductService:
                 'selling_price': data.get('selling_price', product.selling_price),
                 'unit': data.get('unit', product.unit),
                 'threshold': data.get('threshold', product.threshold),
-                'category_id': data.get('category_id', product.category_id)
+                'category_id': data.get('category_id', product.category_id),
+                'supplier_id': data.get('supplier_id', product.supplier_id)
             }
             product = self.product_repo.update(product, **update_data)
             return product.to_dict(), None

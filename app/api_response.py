@@ -9,7 +9,9 @@ class APIResponse:
         if message:
             response['message'] = message
         if data:
-            response.update(data)
+            response['data'] = data
+        else:
+            response['data'] = {}
         return jsonify(response), status_code
     
     @staticmethod

@@ -1,4 +1,4 @@
-from repositories import CategoryRepository
+from app.categories.repo import CategoryRepository
 
 
 class CategoryService:
@@ -6,20 +6,50 @@ class CategoryService:
         self.category_repo = CategoryRepository()
     
     def get_all_categories(self):
-        categories = self.category_repo.get_all()
-        return [{"id": c.id, "name": c.name} for c in categories], None
+        categories = self.category_repo.find_all()
+        return categories, None
     
-    def create_category(self, data, current_user):
-        name = data.get('name')
+    def get_category(self, category_id):
+        category = self.category_repo.get_by_id(category_id)
+        if not category:
+            return None, f"Category with ID '{category_id}' not found"
+        return category, None
+    
+    def create_category(self, data, user):
+        if not data.get('name'):
+            return None, "Category name is required"
         
-        if not name:
-            return None, "The category 'name' is required."
+        existing = self.category_repo.find_by_name(data['name'])
+        if existing:
+            return None, f"Category '{data['name']}' already exists"
         
-        if self.category_repo.find_by_name(name):
-            return None, f"A category with the name '{name}' already exists."
+        category = self.category_repo.create(
+            name=data['name'],
+            description=data.get('description', ''),
+            is_active=True
+        )
+        return category, None
+    
+    def update_category(self, category_id, data, user):
+        category = self.category_repo.get_by_id(category_id)
+        if not category:
+            return None, f"Category with ID '{category_id}' not found"
         
-        try:
-            category = self.category_repo.create(name=name)
-            return {"id": category.id, "name": category.name}, None
-        except Exception:
-            return None, "Could not create category."
+        if data.get('name') and data['name'] != category.name:
+            existing = self.category_repo.find_by_name(data['name'])
+            if existing:
+                return None, f"Category '{data['name']}' already exists"
+        
+        category = self.category_repo.update(category, **data)
+        return category, None
+    
+    def delete_category(self, category_id, user):
+        category = self.category_repo.get_by_id(category_id)
+        if not category:
+            return None, f"Category with ID '{category_id}' not found"
+        
+        if category.products.count() > 0:
+            return None, f"Cannot delete category with existing products. Remove products first."
+        
+        self.category_repo.delete(category)
+        return category, None

@@ -1,28 +1,13 @@
+from datetime import datetime
 from database import db
 
 
 class Category(db.Model):
     __tablename__ = 'categories'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), unique=True, nullable=False)
-    description = db.Column(db.String(200))
-
-
-class CategoryRepository:
-    def __init__(self):
-        self.model = Category
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.String(255))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
-    def get_by_id(self, id):
-        return Category.query.get(id)
-    
-    def find_by_name(self, name):
-        return Category.query.filter_by(name=name).first()
-    
-    def find_all(self):
-        return Category.query.all()
-    
-    def create(self, **kwargs):
-        category = Category(**kwargs)
-        db.session.add(category)
-        db.session.commit()
-        return category
+    products = db.relationship('Product', back_populates='category', lazy='dynamic')

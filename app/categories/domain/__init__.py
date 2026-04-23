@@ -1,3 +1,3 @@
-from app.categories.domain.category import Category, CategoryRepository
+from app.categories.domain.category import Category
 
-__all__ = ['Category', 'CategoryRepository']
+__all__ = ['Category']

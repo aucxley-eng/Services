@@ -86,3 +86,30 @@ def get_low_stock():
         return APIResponse.not_found(message=error, details="Branch not found", solution="Check the branch ID")
     
     return APIResponse.success(data={"low_stock_products": result})
+
+
+@inventory_bp.route('/history', methods=['GET'])
+@jwt_required()
+def get_transaction_history():
+    """Get stock transaction history - admin or manager"""
+    user = get_current_user()
+    
+    if user.role not in ['admin', 'manager']:
+        return APIResponse.forbidden(
+            message="Access denied",
+            details="Only admins and managers can view transaction history",
+            solution="Contact the administrator"
+        )
+    
+    stock_id = request.args.get('stock_id', type=int)
+    product_id = request.args.get('product_id', type=int)
+    branch_id = request.args.get('branch_id', type=int)
+    limit = request.args.get('limit', 50, type=int)
+    
+    inventory_service = InventoryService()
+    result, error = inventory_service.get_transaction_history(stock_id, product_id, branch_id, limit)
+    
+    if error:
+        return APIResponse.not_found(message=error, details="Not found", solution="Check the parameters")
+    
+    return APIResponse.success(data={"transactions": result})

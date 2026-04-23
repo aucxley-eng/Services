@@ -12,9 +12,12 @@ class Product(db.Model):
     expiry_date = db.Column(db.Date)
     threshold = db.Column(db.Integer, default=10)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
+    supplier_id = db.Column(db.Integer, db.ForeignKey('suppliers.id'))
     image_url = db.Column(db.String(255))
     
     stock = db.relationship('Stock', back_populates='product', lazy='dynamic')
+    category = db.relationship('Category', back_populates='products')
+    supplier = db.relationship('Supplier', back_populates='products')
     
     def to_dict(self):
         return {
@@ -26,5 +29,6 @@ class Product(db.Model):
             "unit": self.unit,
             "threshold": self.threshold,
             "category_id": self.category_id,
+            "supplier_id": self.supplier_id,
             "image_url": self.image_url
         }

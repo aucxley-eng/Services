@@ -5,6 +5,7 @@ from flask_jwt_extended import JWTManager
 from flask_jwt_extended.exceptions import NoAuthorizationError, InvalidHeaderError
 from config import Config
 from database import db
+from app.extensions import ma, migrate
 
 
 def create_app(config_class=Config):
@@ -12,6 +13,8 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     db.init_app(app)
+    ma.init_app(app)
+    migrate.init_app(app, db)
     JWTManager(app)
     
     CORS(app)
@@ -37,7 +40,8 @@ def create_app(config_class=Config):
     from app.products.routes import products_bp
     from app.branches.routes import branches_bp
     from app.inventory.routes import inventory_bp
-    # from app.categories.routes import categories_bp
+    from app.categories.routes import categories_bp
+    from app.orders.routes import orders_bp
     # from app.dashboard.routes import dashboard_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
@@ -45,7 +49,8 @@ def create_app(config_class=Config):
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(branches_bp, url_prefix='/api/branches')
     app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
-    # app.register_blueprint(categories_bp, url_prefix='/api/categories')
+    app.register_blueprint(categories_bp, url_prefix='/api/categories')
+    app.register_blueprint(orders_bp, url_prefix='/api/orders')
     # app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
     @app.errorhandler(400)
