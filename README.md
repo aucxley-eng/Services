@@ -109,6 +109,10 @@ Add to all protected endpoints:
 | Update employee | ✓ | ✓ | ✗ |
 | Delete employee | ✓ | ✗ (needs admin) | ✗ |
 | View employees | ✓ | ✓ | ✓ |
+| **Inventory** | | | |
+| Stock transaction | ✓ | ✓ | ✗ |
+| View stock levels | ✓ | ✓ | ✓ |
+| Low stock alerts | ✓ | ✓ | ✗ |
 
 ---
 
@@ -143,7 +147,7 @@ http://localhost:5000/api
 | `/` | POST | Create product | admin, manager |
 | `/<id>` | GET | Get product | all |
 | `/<id>` | PUT | Update product | admin, manager |
-| `/<id>` | DELETE | Delete product | admin, manager |
+| `/<id>` | DELETE | Delete product | admin only |
 
 ### Suppliers (`/api/suppliers`)
 | Endpoint | Method | Description | Access |
@@ -152,7 +156,14 @@ http://localhost:5000/api
 | `/` | POST | Create supplier | admin, manager |
 | `/<id>` | GET | Get supplier | all |
 | `/<id>` | PUT | Update supplier | admin, manager |
-| `/<id>` | DELETE | Delete supplier | admin, manager |
+| `/<id>` | DELETE | Delete supplier | admin only |
+
+### Inventory (`/api/inventory`)
+| Endpoint | Method | Description | Access |
+|----------|--------|-------------|--------|
+| `/transaction` | POST | Stock in/out | admin, manager |
+| `/levels` | GET | Get stock levels | all |
+| `/low-stock` | GET | Low stock alerts | admin, manager |
 
 ---
 
@@ -215,6 +226,41 @@ Header: Authorization: Bearer <token>
     "phone": "+254700000000",
     "taking_returns": true
 }
+```
+
+### Stock Transaction (IN)
+```json
+POST /api/inventory/transaction
+Header: Authorization: Bearer <token>
+{
+    "product_id": 1,
+    "branch_id": 1,
+    "quantity": 100,
+    "type": "in"
+}
+```
+
+### Stock Transaction (OUT)
+```json
+POST /api/inventory/transaction
+Header: Authorization: Bearer <token>
+{
+    "product_id": 1,
+    "branch_id": 1,
+    "quantity": 50,
+    "type": "out"
+}
+```
+
+### Get Stock Levels
+```json
+GET /api/inventory/levels
+GET /api/inventory/levels?branch_id=1
+```
+
+### Get Low Stock Alerts
+```json
+GET /api/inventory/low-stock
 ```
 
 ---

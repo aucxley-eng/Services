@@ -1,6 +1,6 @@
 from database import db
-from models.stock import Stock
-from repositories.base_repository import BaseRepository
+from app.inventory.domain import Stock
+from app.auth.repo.base_repository import BaseRepository
 
 
 class StockRepository(BaseRepository):

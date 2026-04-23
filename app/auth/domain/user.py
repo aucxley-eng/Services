@@ -16,6 +16,8 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    branch = db.relationship('Branch', back_populates='employees')
+    
     ROLES = ['admin', 'manager', 'staff']
     
     @staticmethod

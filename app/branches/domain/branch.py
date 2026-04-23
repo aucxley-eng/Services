@@ -12,6 +12,9 @@ class Branch(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    stock = db.relationship('Stock', back_populates='branch', lazy='dynamic')
+    employees = db.relationship('User', back_populates='branch', lazy='dynamic')
+    
     def to_dict(self):
         return {
             "id": self.id,

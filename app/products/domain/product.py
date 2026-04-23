@@ -14,6 +14,8 @@ class Product(db.Model):
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'))
     image_url = db.Column(db.String(255))
     
+    stock = db.relationship('Stock', back_populates='product', lazy='dynamic')
+    
     def to_dict(self):
         return {
             "id": self.id,

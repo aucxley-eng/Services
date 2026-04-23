@@ -1,6 +1,10 @@
 from database import db
-from models import Product, Branch, Stock
-from repositories import StockRepository, BranchRepository, ProductRepository
+from app.products.domain import Product
+from app.branches.domain import Branch
+from app.inventory.domain import Stock
+from app.inventory.repo import StockRepository
+from app.branches.repo import BranchRepository
+from app.products.repo import ProductRepository
 
 
 class InventoryService:
@@ -80,3 +84,27 @@ class InventoryService:
             })
         
         return output, None
+    
+    def get_low_stock(self, branch_id=None):
+        if branch_id:
+            branch = self.branch_repo.get_by_id(branch_id)
+            if not branch:
+                return None, "The specified branch ID does not exist."
+            stocks = self.stock_repo.get_by_branch(branch_id)
+        else:
+            stocks = self.stock_repo.get_all()
+        
+        low_stock = []
+        for s in stocks:
+            if s.product and s.quantity <= s.product.threshold:
+                low_stock.append({
+                    'product_id': s.product_id,
+                    'product_name': s.product.name,
+                    'branch_id': s.branch_id,
+                    'branch_name': s.branch.name if s.branch else "Unknown",
+                    'current_quantity': s.quantity,
+                    'threshold': s.product.threshold,
+                    'severity': 'critical' if s.quantity == 0 else 'warning'
+                })
+        
+        return low_stock, None

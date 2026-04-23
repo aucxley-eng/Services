@@ -36,7 +36,7 @@ def create_app(config_class=Config):
     from app.suppliers.routes import suppliers_bp
     from app.products.routes import products_bp
     from app.branches.routes import branches_bp
-    # from app.inventory.routes import inventory_bp
+    from app.inventory.routes import inventory_bp
     # from app.categories.routes import categories_bp
     # from app.dashboard.routes import dashboard_bp
 
@@ -44,7 +44,7 @@ def create_app(config_class=Config):
     app.register_blueprint(suppliers_bp, url_prefix='/api/suppliers')
     app.register_blueprint(products_bp, url_prefix='/api/products')
     app.register_blueprint(branches_bp, url_prefix='/api/branches')
-    # app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
+    app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
     # app.register_blueprint(categories_bp, url_prefix='/api/categories')
     # app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
 
