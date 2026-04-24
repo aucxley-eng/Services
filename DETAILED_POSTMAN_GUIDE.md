@@ -1,42 +1,91 @@
-# DETAILED POSTMAN TESTING GUIDE - Step by Step Everything
+# COMPLETE POSTMAN TESTING GUIDE - Every Detail Covered
 
-This guide walks through EVERY single operation in the Zoza Services API. Each action is explained in full detail with screenshots described, exact steps, and expected responses.
+This is the most comprehensive guide for testing the Zoza Services API. Every single detail is covered - from setting up Postman to testing all endpoints with all three roles.
 
 ---
 
 # TABLE OF CONTENTS
 
-1. [How to Set Up Postman](#1-how-to-set-up-postman)
-2. [Admin User - Complete Walkthrough](#2-admin-user---complete-walkthrough)
-3. [Manager User - Complete Walkthrough](#3-manager-user---complete-walkthrough)
-4. [Staff User - Complete Walkthrough](#4-staff-user---complete-walkthrough)
-5. [Testing Branches](#5-testing-branches)
-6. [Testing Categories](#6-testing-categories)
-7. [Testing Products](#7-testing-products)
-8. [Testing Suppliers](#8-testing-suppliers)
-9. [Testing Inventory](#9-testing-inventory)
-10. [Common Errors and How to Fix Them](#10-common-errors-and-how-to-fix-them)
+1. [Understanding the Token System](#1-understanding-the-token-system)
+2. [Postman Setup - Complete](#2-postman-setup---complete)
+3. [How to Use Tokens in Postman](#3-how-to-use-tokens-in-postman)
+4. [Admin User - Everything](#4-admin-user---everything)
+5. [Manager User - Everything](#5-manager-user---everything)
+6. [Staff User - Everything](#6-staff-user---everything)
+7. [Testing All Endpoints](#7-testing-all-endpoints)
+8. [Complete Role Permissions Table](#8-complete-role-permissions-table)
+9. [Common Errors and Fixes](#9-common-errors-and-fixes)
+10. [Quick Reference](#10-quick-reference)
 
 ---
 
-# STEP 1: HOW TO SET UP POSTMAN
+# SECTION 1: UNDERSTANDING THE TOKEN SYSTEM
 
-## Step 1.1: Create a New Collection
+## What is a JWT Token?
 
-1. Open Postman application
-2. Click on **Collections** tab in the left sidebar
-3. Click the **+** button or **New Collection** button
-4. A new collection will be created with a default name
-5. Right-click on the collection → Rename to "Zoza Services API"
-6. Press Enter to save
+A JWT (JSON Web Token) is a security token that proves you are logged in. Think of it like a digital ID card that expires after 1 hour.
 
-## Step 1.2: Set Up Environment Variables
+## Why Do We Need Tokens?
 
-1. Click on the **Environments** tab (next to Collections)
-2. Click the **+** button or **New Environment** button
-3. Rename the environment to "Development"
-4. You will see two columns: "Variable" and "Initial Value" / "Current Value"
-5. Add the following variables:
+Every protected endpoint requires authentication. The token tells the server:
+- Who you are (user ID)
+- What your role is (admin, manager, or staff)
+- When your token expires
+
+## What Happens If You Don't Use a Token?
+
+You will get: `401 Unauthorized` - "No JWT token was provided"
+
+## What Happens If Your Token Expires?
+
+You will get: `401 Unauthorized` - "Token has expired"
+
+## Solution When Token Expires
+
+Simply login again to get a new token - it takes 2 seconds.
+
+---
+
+# SECTION 2: POSTMAN SETUP - COMPLETE
+
+## Step 2.1: Create Workspace (Optional but Recommended)
+
+1. Open Postman
+2. Click on "Workspaces" in the top left
+3. Click "Create Workspace"
+4. Name it "Zoza Services Testing"
+5. Click Create
+6. Select "My Workspace" or your new workspace
+
+## Step 2.2: Create Collection
+
+### What is a Collection?
+
+A collection is a folder that holds all your API requests. It makes testing organized.
+
+### How to Create
+
+1. Look at the left sidebar in Postman
+2. Find the **Collections** tab (it has a folder icon)
+3. Click the **+** button next to Collections
+4. A new collection appears with a default name like "New Collection"
+5. **Double-click** on the name to edit it
+6. Type: `Zoza Services API`
+7. Press **Enter** on your keyboard
+
+## Step 2.3: Set Up Environment Variables
+
+### What Are Environment Variables?
+
+Environment variables are placeholders that you can reuse. Instead of typing `http://127.0.0.1:5000` every time, you type `{{base_url}}`.
+
+### How to Set Up
+
+1. In the left sidebar, find **Environments** (next to Collections)
+2. Click the **+** button
+3. The environment name is highlighted - type: `Development`
+4. Below, you will see a table with columns: Variable, Initial Value, Current Value
+5. Add these variables one by one:
 
 | Variable | Initial Value | Current Value |
 |----------|--------------|---------------|
@@ -48,59 +97,203 @@ This guide walks through EVERY single operation in the Zoza Services API. Each a
 | category_id | (leave empty) | (leave empty) |
 | product_id | (leave empty) | (leave empty) |
 | supplier_id | (leave empty) | (leave empty) |
+| last_token | (leave empty) | (leave empty) |
 
-6. Click the **Save** button (floppy icon) to save the environment
+6. Click the **Save** button (looks like a floppy disk in the top right of the environment panel)
 
-## Step 1.3: Select the Environment
+### What Each Variable Means
 
-1. In the top-right corner of Postman, you will see a dropdown that says "No Environment" or something else
-2. Click on that dropdown
-3. Select "Development" from the list
-4. The environment is now active - you can use {{base_url}} in your requests
+| Variable | Purpose |
+|----------|---------|
+| base_url | The server URL (http://127.0.0.1:5000) |
+| admin_token | Token for admin user |
+| manager_token | Token for manager user |
+| staff_token | Token for staff user |
+| branch_id | ID of last created branch |
+| category_id | ID of last created category |
+| product_id | ID of last created product |
+| supplier_id | ID of last created supplier |
+| last_token | Token for current user (convenience) |
 
-## Step 1.4: Set Up Authorization Header (Optional - Alternative Method)
+## Step 2.4: Select the Environment
 
-Instead of adding the token to every request manually, you can set up default authorization:
+1. Look at the top right of Postman
+2. You will see a dropdown that might say "No Environment"
+3. Click the dropdown
+4. Select **Development**
+5. You will know it's selected because it shows "Development" in the dropdown
 
-1. Click on the "Zoza Services API" collection
-2. Click the **...** (three dots) or right-click on the collection
-3. Select **Edit**
-4. Go to the **Authorization** tab
-5. In the Type dropdown, select **Bearer Token**
-6. In the Token field, type: {{admin_token}}
-7. This will automatically add the Authorization header to all requests in this collection
-8. Click **Save**
+## Step 2.5: Create Sub-Folders for Organization (Optional)
 
-Note: You will need separate collections for each role, or you can manually add headers as shown in the instructions below.
+Inside your collection, create folders for each role:
+
+1. Right-click on "Zoza Services API" collection
+2. Click "Add Folder"
+3. Name it "Admin Requests"
+4. Repeat to create:
+   - Admin Requests
+   - Manager Requests
+   - Staff Requests
+   - Branches
+   - Categories
+   - Products
+   - Suppliers
+   - Inventory
+
+This keeps everything organized.
 
 ---
 
-# STEP 2: ADMIN USER - COMPLETE WALKTHROUGH
+# SECTION 3: HOW TO USE TOKENS IN POSTMAN
 
-The admin user has FULL access to everything in the system. Here is every single thing an admin can do, explained step by step.
+## Understanding the Authorization Header
 
-## Step 2.1: Register Admin User
+Every protected request needs an Authorization header in this format:
 
-### What This Does
-Creates a new admin user account in the system. This is the FIRST step you must do before anything else. Without registering, you cannot login or access any protected endpoints.
+```
+Authorization: Bearer YOUR_ACCESS_TOKEN_HERE
+```
 
-### How to Do It in Postman
+**Breakdown:**
+- `Authorization` = the header name
+- `Bearer` = the type of authentication
+- `YOUR_ACCESS_TOKEN_HERE` = the long string you got from login
 
-1. Click on the **+** button next to Collections to create a new request
-2. Click on the request name and rename it to "Register Admin"
-3. Next to the URL bar, make sure **POST** is selected
-4. In the URL field, type: `{{base_url}}/api/auth/register`
-   - It should look like: http://127.0.0.1:5000/api/auth/register
-5. Click on the **Params** tab - make sure it is empty (we don't need params here)
-6. Click on the **Headers** tab:
-   - Under "Key", type: Content-Type
-   - Under "Value", type: application/json
-   - Make sure the checkbox on the left is checked
-7. Click on the **Body** tab:
-   - Select **raw** (click on the radio button)
-   - In the dropdown that appears (which probably says "Text"), select **JSON**
-8. In the large text area below, type exactly:
+## Method 1: Adding Token to Every Request (Manual)
 
+### Step by Step
+
+1. Create or open a request
+2. Click on the **Headers** tab
+3. Under "Key", type: `Authorization`
+4. Under "Value", type: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...` (paste your actual token)
+5. Make sure the checkbox is checked
+
+### Important Headers for Every Request
+
+Always add these headers for EVERY request:
+
+| Header Key | Header Value |
+|-----------|--------------|
+| Content-Type | application/json |
+| Authorization | Bearer YOUR_TOKEN_HERE |
+
+## Method 2: Using Environment Variables (Recommended)
+
+### Setting Up
+
+1. After login, copy the `access_token` from the response
+2. Go to Environments → Development
+3. Click on "Current Value" for the appropriate token field
+4. Paste the token
+5. Click Save
+
+### Using in Requests
+
+Now in any request:
+1. Click Headers tab
+2. Under "Key": `Authorization`
+3. Under "Value": `Bearer {{admin_token}}`
+
+Postman will automatically substitute `{{admin_token}}` with your actual token.
+
+## Method 3: Collection-Level Authorization (Auto for All Requests)
+
+This automatically adds the token to ALL requests in the collection:
+
+### How to Set Up
+
+1. Right-click on "Zoza Services API" collection
+2. Click **Edit**
+3. Go to the **Authorization** tab
+4. In the "Type" dropdown, select **Bearer Token**
+5. In the "Token" field, type: `{{admin_token}}`
+6. Click **Save**
+
+Now ALL requests in this collection will have the Authorization header automatically!
+
+### Warning
+
+This uses ONE token for ALL requests. For testing different roles, you'll need to:
+- Either create separate collections for each role
+- OR use Method 1/2 and change the token manually
+
+## Method 4: Quick Token Saving (Saves Time)
+
+After getting a token from login:
+
+1. Copy the token (everything in quotes after "access_token":)
+2. Go to your environment
+3. Paste into the appropriate token field
+4. Click Save
+
+Now you can use `{{admin_token}}` in any request.
+
+---
+
+## Where DOES the Token Go? (The Answer)
+
+### Token Location Summary
+
+| Location | What Happens |
+|----------|-------------|
+| Headers tab **Authorization** field | ✅ WORKS |
+| Body tab | ❌ DOES NOT WORK |
+| URL/Params | ❌ DOES NOT WORK |
+
+### Correct Format
+
+**Headers tab:**
+```
+Key: Authorization
+Value: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc3...
+```
+
+### Wrong Formats (Do NOT Use)
+
+❌ Token in Body:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "name": "Branch"
+}
+```
+
+❌ Token in URL:
+```
+http://127.0.0.1:5000/api/branches/?token=eyJhbGciOiJIUzI1NiIs...
+```
+
+❌ No Authorization header at all
+
+---
+
+# SECTION 4: ADMIN USER - EVERYTHING
+
+The admin has COMPLETE access to everything in the system.
+
+## Prerequisites: Start Your Server
+
+Before testing, make sure your server is running:
+
+1. Open terminal/command prompt
+2. Navigate to your project folder
+3. Run: `python3 run.py`
+4. Wait for: "Running on http://127.0.0.1:5000"
+
+## Step 4.1: Register Admin (First Ever Step)
+
+### URL
+```
+POST {{base_url}}/api/auth/register
+```
+
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+
+### Body (raw JSON)
 ```json
 {
   "username": "admin",
@@ -112,12 +305,9 @@ Creates a new admin user account in the system. This is the FIRST step you must 
 }
 ```
 
-9. Click the **Send** button
+### Click Send
 
-### What You Should See
-
-Look at the response area below. You should see:
-
+### Expected Response (201 Created)
 ```json
 {
   "data": {
@@ -135,33 +325,27 @@ Look at the response area below. You should see:
 }
 ```
 
-And the status should be: **201 Created**
-
-### Important: Copy the Token
-
-1. In the response, find the "access_token" field
-2. Copy everything inside the quotes (it starts with "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
-3. Go to your Environment ("Development")
-4. In the "Current Value" field for "admin_token", paste the token
-5. Click Save
-
-You will need this token for ALL admin requests!
+### What to Do Next
+1. Copy the `access_token` from the response
+2. Go to Environment → Development
+3. Paste into admin_token (Current Value)
+4. Click Save
 
 ---
 
-## Step 2.2: Login as Admin
+## Step 4.2: Login as Admin
 
-### What This Does
-Login with the admin account to get a fresh JWT token. You need to login every time you want to use the API.
+### URL
+```
+POST {{base_url}}/api/auth/login
+```
 
-### How to Do It in Postman
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
 
-1. Create a new request → Rename to "Login Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/auth/login`
-4. Headers tab: Content-Type → application/json
-5. Body tab → raw → JSON:
-
+### Body
 ```json
 {
   "email": "admin@example.com",
@@ -169,10 +353,9 @@ Login with the admin account to get a fresh JWT token. You need to login every t
 }
 ```
 
-6. Click **Send**
+### Click Send
 
-### What You Should See
-
+### Expected Response (200 OK)
 ```json
 {
   "data": {
@@ -190,27 +373,30 @@ Login with the admin account to get a fresh JWT token. You need to login every t
 }
 ```
 
-Status: **200 OK**
+### Why Login Again If Already Registered?
+
+- After server restart, old tokens are invalidated
+- After 1 hour, token expires
+- To get a fresh token
 
 ---
 
-## Step 2.3: Get Current Admin Profile
+## Step 4.3: Get My Profile
 
-### What This Does
-Shows the profile of the currently logged in admin user. This is useful to verify that the token is working and to see your account details.
+### URL
+```
+GET {{base_url}}/api/auth/me
+```
 
-### How to Do It in Postman
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
-1. Create a new request → Rename to "Get My Profile"
-2. Make sure **GET** is selected
-3. URL: `{{base_url}}/api/auth/me`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Click **Send**
+### Click Send
 
-### What You Should See
-
+### Expected Response (200 OK)
 ```json
 {
   "data": {
@@ -227,24 +413,25 @@ Shows the profile of the currently logged in admin user. This is useful to verif
 
 ---
 
-## Step 2.4: Refresh Admin Token
+## Step 4.4: Refresh Token
 
-### What This Does
-Gets a new JWT token without needing to login again. Useful if your token is about to expire.
+### URL
+```
+POST {{base_url}}/api/auth/refresh-token
+```
 
-### How to Do It in Postman
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
-1. Create a new request → Rename to "Refresh Token"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/auth/refresh-token`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab: (leave empty or just {})
-6. Click **Send**
+### Body
+(Leave empty or `{}`)
 
-### What You Should See
+### Click Send
 
+### Expected Response (200 OK)
 ```json
 {
   "data": {
@@ -254,25 +441,28 @@ Gets a new JWT token without needing to login again. Useful if your token is abo
 }
 ```
 
-Update the admin_token in your environment with the new token!
+### Update Your Token
+
+1. Copy the new access_token
+2. Update admin_token in your environment
+3. Click Save
 
 ---
 
-## Step 2.5: Create First Branch (As Admin)
+## Step 4.5: Create First Branch
 
-### What This Does
-Creates a new branch/location. This is REQUIRED before you can add products or manage inventory. Every product must be assigned to a branch.
+### URL
+```
+POST {{base_url}}/api/branches/
+```
 
-### How to Do It in Postman
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
-1. Create a new request → Rename to "Create Branch - Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/branches/`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab → raw → JSON:
-
+### Body
 ```json
 {
   "name": "Main Branch",
@@ -281,10 +471,9 @@ Creates a new branch/location. This is REQUIRED before you can add products or m
 }
 ```
 
-6. Click **Send**
+### Click Send
 
-### What You Should See
-
+### Expected Response (201 Created)
 ```json
 {
   "data": {
@@ -299,73 +488,28 @@ Creates a new branch/location. This is REQUIRED before you can add products or m
 }
 ```
 
-Status: **201 Created**
-
-### Important: Save the Branch ID
-
-1. Note the "id" value (should be 1)
-2. Go to your Environment
-3. Save 1 as branch_id
+### Note the branch_id
+1. Note the "id": 1
+2. Save to branch_id in environment
 
 ---
 
-## Step 2.6: Create Second Branch (As Admin)
+## Step 4.6: Get All Branches
 
-### What This Does
-You can create multiple branches for different locations.
-
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Create Branch 2"
-2. POST to `{{base_url}}/api/branches/`
-3. Headers: same as before
-4. Body:
-
-```json
-{
-  "name": "Second Branch",
-  "location": "Chennai",
-  "phone": "044-12345678"
-}
+### URL
+```
+GET {{base_url}}/api/branches/
 ```
 
-5. Click **Send**
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
-### What You Should See
+### Click Send
 
-```json
-{
-  "data": {
-    "id": 2,
-    "name": "Second Branch",
-    "location": "Chennai",
-    "phone": "044-12345678",
-    "email": null,
-    "is_active": true
-  },
-  "message": "Branch created successfully"
-}
-```
-
----
-
-## Step 2.7: Get All Branches (As Admin)
-
-### What This Does
-Lists all branches in the system.
-
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Get All Branches"
-2. Make sure **GET** is selected
-3. URL: `{{base_url}}/api/branches/`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Click **Send**
-
-### What You Should See
-
+### Expected Response (200 OK)
 ```json
 {
   "data": {
@@ -377,14 +521,6 @@ Lists all branches in the system.
         "phone": "0422-123456",
         "email": null,
         "is_active": true
-      },
-      {
-        "id": 2,
-        "name": "Second Branch",
-        "location": "Chennai",
-        "phone": "044-12345678",
-        "email": null,
-        "is_active": true
       }
     ]
   },
@@ -394,255 +530,145 @@ Lists all branches in the system.
 
 ---
 
-## Step 2.8: Get Single Branch by ID (As Admin)
+## Step 4.7: Get Branch by ID
 
-### What This Does
-Gets details of a specific branch by its ID.
-
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Get Branch by ID"
-2. GET to `{{base_url}}/api/branches/1`
-3. Headers: same as before
-4. Click **Send**
-
-### What You Should See
-
-```json
-{
-  "data": {
-    "id": 1,
-    "name": "Main Branch",
-    "location": "Coimbatore",
-    "phone": "0422-123456",
-    "email": null,
-    "is_active": true
-  },
-  "message": "Branch retrieved successfully"
-}
+### URL
 ```
+GET {{base_url}}/api/branches/1
+```
+
+### Headers
+Same as before
+
+### Click Send
 
 ---
 
-## Step 2.9: Update Branch (As Admin)
+## Step 4.8: Update Branch
 
-### What This Does
-Updates the details of an existing branch.
+### URL
+```
+PUT {{base_url}}/api/branches/1
+```
 
-### How to Do It in Postman
+### Headers
+Same as before
 
-1. Create a new request → Rename to "Update Branch"
-2. Make sure **PUT** is selected
-3. URL: `{{base_url}}/api/branches/1`
-4. Headers: same as before
-5. Body:
-
+### Body
 ```json
 {
   "name": "Main Branch Updated",
-  "location": "Updated Coimbatore",
+  "location": "New Coimbatore",
   "phone": "0422-999999"
 }
 ```
 
-6. Click **Send**
-
-### What You Should See
-
-```json
-{
-  "data": {
-    "id": 1,
-    "name": "Main Branch Updated",
-    "location": "Updated Coimbatore",
-    "phone": "0422-999999",
-    "email": null,
-    "is_active": true
-  },
-  "message": "Branch updated successfully"
-}
-```
+### Click Send
 
 ---
 
-## Step 2.10: Delete Branch (As Admin)
+## Step 4.9: Delete Branch
 
-### What This Does
-Deletes a branch permanently. Only admins can do this.
-
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Delete Branch"
-2. Make sure **DELETE** is selected
-3. URL: `{{base_url}}/api/branches/2`
-4. Headers: same as before
-5. Click **Send**
-
-### What You Should See
-
-```json
-{
-  "message": "Branch deleted successfully"
-}
+### URL
 ```
+DELETE {{base_url}}/api/branches/1
+```
+
+### Headers
+Same as before
+
+### Click Send
 
 ---
 
-## Step 2.11: Create Category (As Admin)
+## Step 4.10: Create Category
 
-### What This Does
-Creates a category to organize products. Products belong to categories.
+### URL
+```
+POST {{base_url}}/api/categories/
+```
 
-### How to Do It in Postman
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
-1. Create a new request → Rename to "Create Category - Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/categories/`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab → raw → JSON:
-
+### Body
 ```json
 {
   "name": "Food & Beverages",
-  "description": "Food and beverage products"
+  "description": "Food and drinks"
 }
 ```
 
-6. Click **Send**
-
-### What You Should See
-
+### Expected Response (201 Created)
 ```json
 {
   "data": {
     "id": 1,
     "name": "Food & Beverages",
-    "description": "Food and beverage products"
+    "description": "Food and drinks"
   },
   "message": "Category created successfully"
 }
 ```
 
-Status: **201 Created**
-
-### Important: Save the Category ID
-
-1. Note the "id" value (should be 1)
-2. Save 1 as category_id
+### Note: Save category_id = 1
 
 ---
 
-## Step 2.12: Create Second Category (As Admin)
+## Step 4.11: Get All Categories
 
-### How to Do It
-
-1. POST to `{{base_url}}/api/categories/`
-2. Body:
-
-```json
-{
-  "name": "Household Items",
-  "description": "Items for household use"
-}
+### URL
+```
+GET {{base_url}}/api/categories/
 ```
 
-3. Click **Send**
+### Headers
+Admin token
+
+### Click Send
 
 ---
 
-## Step 2.13: Get All Categories (As Admin)
+## Step 4.12: Update Category
 
-### How to Do It
+### URL
+```
+PUT {{base_url}}/api/categories/1
+```
 
-1. GET `{{base_url}}/api/categories/`
-2. Headers: admin token
-3. Click **Send**
-
-### What You Should See
-
+### Body
 ```json
 {
-  "data": {
-    "categories": [
-      {
-        "id": 1,
-        "name": "Food & Beverages",
-        "description": "Food and beverage products"
-      },
-      {
-        "id": 2,
-        "name": "Household Items",
-        "description": "Items for household use"
-      }
-    ]
-  },
-  "message": "Categories retrieved successfully"
+  "name": "Updated Category",
+  "description": "New description"
 }
 ```
 
 ---
 
-## Step 2.14: Get Category by ID (As Admin)
+## Step 4.13: Delete Category
 
-### How to Do It
-
-1. GET `{{base_url}}/api/categories/1`
-2. Click **Send**
-
----
-
-## Step 2.15: Update Category (As Admin)
-
-### How to Do It
-
-1. PUT `{{base_url}}/api/categories/1`
-2. Body:
-
-```json
-{
-  "name": "Food & Beverages Updated",
-  "description": "Updated description"
-}
+### URL
 ```
-
-3. Click **Send**
-
----
-
-## Step 2.16: Delete Category (As Admin)
-
-### How to Do It
-
-1. DELETE `{{base_url}}/api/categories/2`
-2. Click **Send**
-
-### Response
-
-```json
-{
-  "message": "Category deleted successfully"
-}
+DELETE {{base_url}}/api/categories/1
 ```
 
 ---
 
-## Step 2.17: Create Supplier (As Admin)
+## Step 4.14: Create Supplier
 
-### What This Does
-Creates a new supplier/vendor who provides products.
+### URL
+```
+POST {{base_url}}/api/suppliers/
+```
 
-### How to Do It in Postman
+### Headers
+Admin token
 
-1. Create a new request → Rename to "Create Supplier - Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/suppliers/`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab → raw → JSON:
-
+### Body
 ```json
 {
   "name": "Nestle India",
@@ -652,92 +678,53 @@ Creates a new supplier/vendor who provides products.
 }
 ```
 
-6. Click **Send**
+### Note: Save supplier_id = 1
 
-### What You Should See
+---
 
+## Step 4.15: Get All Suppliers
+
+### URL
+```
+GET {{base_url}}/api/suppliers/
+```
+
+---
+
+## Step 4.16: Update Supplier
+
+### URL
+```
+PUT {{base_url}}/api/suppliers/1
+```
+
+### Body
 ```json
 {
-  "data": {
-    "id": 1,
-    "name": "Nestle India",
-    "email": "contact@nestle.com",
-    "phone": "1800-123-4567",
-    "taking_returns": true
-  },
-  "message": "Supplier created successfully"
+  "name": "Updated Supplier",
+  "email": "new@email.com"
 }
 ```
 
-### Important: Save the Supplier ID
-
-1. Note the "id" value (should be 1)
-2. Save 1 as supplier_id
-
 ---
 
-## Step 2.18: Get All Suppliers (As Admin)
+## Step 4.17: Delete Supplier
 
-### How to Do It
-
-1. GET `{{base_url}}/api/suppliers/`
-2. Click **Send**
-
----
-
-## Step 2.19: Get Supplier by ID (As Admin)
-
-### How to Do It
-
-1. GET `{{base_url}}/api/suppliers/1`
-2. Click **Send**
-
----
-
-## Step 2.20: Update Supplier (As Admin)
-
-### How to Do It
-
-1. PUT `{{base_url}}/api/suppliers/1`
-2. Body:
-
-```json
-{
-  "name": "Nestle India Updated",
-  "email": "updated@nestle.com",
-  "phone": "1800-999-9999",
-  "taking_returns": false
-}
+### URL
+```
+DELETE {{base_url}}/api/suppliers/1
 ```
 
-3. Click **Send**
-
 ---
 
-## Step 2.21: Delete Supplier (As Admin)
+## Step 4.18: Create Product
 
-### How to Do It
+### URL
+```
+POST {{base_url}}/api/products/
+```
 
-1. DELETE `{{base_url}}/api/suppliers/1`
-2. Click **Send**
-
----
-
-## Step 2.22: Create Product (As Admin)
-
-### What This Does
-Creates a new product in the inventory system. The product needs a name, buying price, and should be linked to a category.
-
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Create Product - Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/products/`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab → raw → JSON:
-
+### Body
 ```json
 {
   "name": "Maggi Noodles",
@@ -750,134 +737,90 @@ Creates a new product in the inventory system. The product needs a name, buying 
 }
 ```
 
-6. Click **Send**
-
-### What You Should See
-
-```json
-{
-  "data": {
-    "id": 1,
-    "name": "Maggi Noodles",
-    "buying_price": 50,
-    "selling_price": 80,
-    "unit": "packets",
-    "threshold": 10,
-    "category_id": 1,
-    "supplier_id": 1
-  },
-  "message": "Product created successfully"
-}
-```
-
-### Important: Save the Product ID
-
-1. Note the "id" value (should be 1)
-2. Save 1 as product_id
+### Note: Save product_id = 1
 
 ---
 
-## Step 2.23: Get All Products (As Admin)
+## Step 4.19: Get All Products
 
-### How to Do It
-
-1. Create a new request → Rename to "Get All Products"
-2. GET `{{base_url}}/api/products/?page=1&per_page=10`
-3. Headers: admin token
-4. Click **Send**
-
-### What You Should See
-
-```json
-{
-  "data": {
-    "products": [
-      {
-        "id": 1,
-        "name": "Maggi Noodles",
-        "buying_price": 50,
-        "selling_price": 80,
-        "unit": "packets",
-        "threshold": 10,
-        "category_id": 1,
-        "supplier_id": 1
-      }
-    ]
-  },
-  "message": "Products retrieved successfully"
-}
+### URL
+```
+GET {{base_url}}/api/products/?page=1&per_page=10
 ```
 
 ---
 
-## Step 2.24: Search Products (As Admin)
+## Step 4.20: Search Products
 
-### How to Do It
-
-1. GET `{{base_url}}/api/products/?search=maggi`
-2. Click **Send**
-
-### What You Should See
-
-Products with "maggi" in the name.
+### URL
+```
+GET {{base_url}}/api/products/?search=maggi
+```
 
 ---
 
-## Step 2.25: Get Product by ID (As Admin)
+## Step 4.21: Get Product by ID
 
-### How to Do It
-
-1. GET `{{base_url}}/api/products/1`
-2. Click **Send**
+### URL
+```
+GET {{base_url}}/api/products/1
+```
 
 ---
 
-## Step 2.26: Update Product (As Admin)
+## Step 4.22: Update Product
 
-### How to Do It
+### URL
+```
+PUT {{base_url}}/api/products/1
+```
 
-1. PUT `{{base_url}}/api/products/1`
-2. Body:
-
+### Body
 ```json
 {
-  "name": "Maggi Noodles Updated",
+  "name": "Updated Product",
   "buying_price": 55,
-  "selling_price": 85,
-  "unit": "packets",
-  "threshold": 15,
-  "category_id": 1
+  "selling_price": 85
 }
 ```
 
-3. Click **Send**
+---
+
+## Step 4.23: Delete Product
+
+### URL
+```
+DELETE {{base_url}}/api/products/1
+```
 
 ---
 
-## Step 2.27: Delete Product (As Admin)
+## Step 4.24: Stock In (Add Inventory) - Detailed
 
-### How to Do It
+### URL
+```
+POST {{base_url}}/api/inventory/transaction
+```
 
-1. DELETE `{{base_url}}/api/products/1`
-2. Click **Send**
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
----
+### Body Breakdown
 
-## Step 2.28: Stock In - Add Inventory (As Admin)
+The body must contain these REQUIRED fields:
+- product_id (which product to add stock to)
+- branch_id (which branch's inventory)
+- quantity (how many units)
+- type (must be "in" for adding)
 
-### What This Does
-Adds stock/inventory to a product at a specific branch. This is how you record new stock received from suppliers.
+OPTIONAL fields:
+- reason (why are we adding stock)
+- notes (any additional information)
 
-### How to Do It in Postman
-
-1. Create a new request → Rename to "Stock In - Admin"
-2. Make sure **POST** is selected
-3. URL: `{{base_url}}/api/inventory/transaction`
-4. Headers tab:
-   - Content-Type → application/json
-   - Authorization → Bearer {{admin_token}}
-5. Body tab → raw → JSON:
-
+### Complete Body
 ```json
 {
   "product_id": 1,
@@ -885,14 +828,13 @@ Adds stock/inventory to a product at a specific branch. This is how you record n
   "quantity": 100,
   "type": "in",
   "reason": "Purchase from supplier",
-  "notes": "Initial stock"
+  "notes": "Initial stock for new product"
 }
 ```
 
-6. Click **Send**
+### Click Send
 
-### What You Should See
-
+### Expected Response (201 Created)
 ```json
 {
   "data": {
@@ -913,19 +855,80 @@ Adds stock/inventory to a product at a specific branch. This is how you record n
 }
 ```
 
+### Response Breakdown
+
+| Field | Meaning |
+|-------|---------|
+| transaction_id | Unique ID for this transaction (1) |
+| previous_quantity | Stock before adding (0) |
+| current_quantity | Stock after adding (100) |
+| change | How much added (+100) |
+| low_stock_alert | true if below threshold |
+| recorded_by | Who made the change |
+
 ---
 
-## Step 2.29: Stock Out - Remove Inventory (As Admin)
+## Step 4.24B: Stock In - Add More Stock
+
+### Scenario
+You already added 100 items, now you want to add 50 more.
+
+### Body
+```json
+{
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 50,
+  "type": "in",
+  "reason": "Restocking",
+  "notes": "Weekly order"
+}
+```
+
+### Expected Response
+```json
+{
+  "data": {
+    "transaction_id": 2,
+    "details": {
+      "product": "Maggi Noodles",
+      "branch": "Main Branch",
+      "previous_quantity": 100,
+      "current_quantity": 150,
+      "change": "+50"
+    }
+  }
+}
+```
+
+Notice: previous_quantity is now 100, current_quantity is 150!
+
+---
+
+## Step 4.25: Stock Out (Remove Inventory) - Detailed
 
 ### What This Does
-Removes stock from inventory (e.g., when items are sold or damaged).
+Removes stock from inventory when products are sold, damaged, lost, or expired.
 
-### How to Do It in Postman
+### URL
+```
+POST {{base_url}}/api/inventory/transaction
+```
 
-1. Create a new request → Rename to "Stock Out - Admin"
-2. POST to `{{base_url}}/api/inventory/transaction`
-3. Body:
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
+### Body - REQUIRED Fields
+
+- product_id - which product
+- branch_id - which branch
+- quantity - how many to remove (MUST be less than current stock!)
+- type - must be "out"
+
+### Body
 ```json
 {
   "product_id": 1,
@@ -937,20 +940,19 @@ Removes stock from inventory (e.g., when items are sold or damaged).
 }
 ```
 
-4. Click **Send**
+### Click Send
 
-### What You Should See
-
+### Expected Response (201 Created)
 ```json
 {
   "data": {
-    "transaction_id": 2,
+    "transaction_id": 3,
     "message": "Stock removed successfully",
     "details": {
       "product": "Maggi Noodles",
       "branch": "Main Branch",
-      "previous_quantity": 100,
-      "current_quantity": 90,
+      "previous_quantity": 150,
+      "current_quantity": 140,
       "change": "-10",
       "low_stock_alert": false,
       "reason": "Sold to customer",
@@ -960,22 +962,54 @@ Removes stock from inventory (e.g., when items are sold or damaged).
 }
 ```
 
+### Important: Stock Out Validation
+
+❌ If you try to remove MORE than available:
+```json
+{
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 200,
+  "type": "out"
+}
+```
+
+You will get:
+```json
+{
+  "error": "Error",
+  "message": "Cannot remove 200 units. Only 140 available."
+}
+```
+
+Status: **400 Bad Request**
+
 ---
 
-## Step 2.30: Get Stock Levels (As Admin)
+## Step 4.26: Get Stock Levels - Detailed
 
-### What This Does
-Shows the current stock quantity for all products at each branch.
+### What This Shows
+Current stock quantity for ALL products at ALL branches.
 
-### How to Do It in Postman
+### URL
+```
+GET {{base_url}}/api/inventory/levels
+```
 
-1. Create a new request → Rename to "Get Stock Levels"
-2. GET `{{base_url}}/api/inventory/levels?branch_id=1`
-3. Headers: admin token
-4. Click **Send**
+### URL with Branch Filter
+```
+GET {{base_url}}/api/inventory/levels?branch_id=1
+```
 
-### What You Should See
+### Headers
+| Key | Value |
+|-----|-------|
+| Content-Type | application/json |
+| Authorization | Bearer {{admin_token}} |
 
+### Click Send
+
+### Expected Response (200 OK)
 ```json
 {
   "data": {
@@ -985,27 +1019,57 @@ Shows the current stock quantity for all products at each branch.
         "product_name": "Maggi Noodles",
         "branch_id": 1,
         "branch_name": "Main Branch",
-        "quantity": 90
+        "quantity": 140
       }
     ]
-  }
+  },
+  "message": "Stock levels retrieved successfully"
 }
 ```
 
+### What Each Field Means
+
+| Field | Value |
+|-------|-------|
+| product_id | 1 |
+| product_name | "Maggi Noodles" |
+| branch_id | 1 |
+| branch_name | "Main Branch" |
+| quantity | 140 (current stock) |
+
 ---
 
-## Step 2.31: Get Low Stock Alerts (As Admin)
+## Step 4.27: Get Low Stock Alerts - Detailed
 
-### What This Does
-Shows products that are below the threshold and need restocking.
+### What This Shows
+Products where quantity is at or below the threshold (default threshold is 10).
 
-### How to Do It in Postman
+### URL
+```
+GET {{base_url}}/api/inventory/low-stock
+```
 
-1. GET `{{base_url}}/api/inventory/low-stock?branch_id=1`
-2. Click **Send**
+### With Branch Filter
+```
+GET {{base_url}}/api/inventory/low-stock?branch_id=1
+```
 
-### What You Should See (if any products are low)
+### Headers
+Admin or Manager token required
 
+### Click Send
+
+### Scenario 1: No Low Stock (Good!)
+```json
+{
+  "data": {
+    "low_stock_products": []
+  },
+  "message": "Low stock products retrieved successfully"
+}
+```
+
+### Scenario 2: Low Stock Found
 ```json
 {
   "data": {
@@ -1015,7 +1079,7 @@ Shows products that are below the threshold and need restocking.
         "product_name": "Maggi Noodles",
         "branch_id": 1,
         "branch_name": "Main Branch",
-        "current_quantity": 3,
+        "current_quantity": 5,
         "threshold": 10,
         "severity": "warning"
       }
@@ -1024,31 +1088,65 @@ Shows products that are below the threshold and need restocking.
 }
 ```
 
+### Severity Levels
+
+| Severity | When |
+|----------|------|
+| warning | quantity is between 1 and threshold |
+| critical | quantity is 0 |
+
 ---
 
-## Step 2.32: Get Transaction History (As Admin)
+## Step 4.28: Get Transaction History - Detailed
 
-### What This Does
-Shows the complete audit trail of all stock movements (who added/removed stock, when, how much).
+### What This Shows
+Complete audit trail of all stock movements.
 
-### How to Do It in Postman
+### URL
+```
+GET {{base_url}}/api/inventory/history
+```
 
-1. GET `{{base_url}}/api/inventory/history?product_id=1&branch_id=1&limit=50`
-2. Click **Send**
+### With All Filters
+```
+GET {{base_url}}/api/inventory/history?product_id=1&branch_id=1&limit=50
+```
 
-### What You Should See
+### Filter Options
 
+| Parameter | Description | Example |
+|-----------|-------------|---------|
+| product_id | Filter by product | 1 |
+| branch_id | Filter by branch | 1 |
+| stock_id | Filter by stock record | 1 |
+| limit | Number of records (default 50) | 50 |
+
+### Headers
+Admin or Manager token required
+
+### Click Send
+
+### Expected Response
 ```json
 {
   "data": {
     "transactions": [
       {
-        "id": 2,
+        "id": 3,
         "type": "out",
         "quantity": 10,
         "reason": "Sold to customer",
         "notes": "Daily sales",
-        "created_at": "2024-04-23T10:30:00",
+        "created_at": "2024-04-23T14:30:00",
+        "user": "Admin User"
+      },
+      {
+        "id": 2,
+        "type": "in",
+        "quantity": 50,
+        "reason": "Restocking",
+        "notes": "Weekly order",
+        "created_at": "2024-04-23T12:00:00",
         "user": "Admin User"
       },
       {
@@ -1061,23 +1159,246 @@ Shows the complete audit trail of all stock movements (who added/removed stock, 
         "user": "Admin User"
       }
     ]
-  }
+  },
+  "message": "Transaction history retrieved successfully"
+}
+```
+
+### Transaction Fields Explained
+
+| Field | Meaning |
+|-------|---------|
+| id | Transaction ID |
+| type | "in" = added, "out" = removed |
+| quantity | Units changed |
+| reason | Why it changed |
+| notes | Additional info |
+| created_at | When it happened |
+| user | Who made the change |
+
+---
+
+## Inventory Testing - Complete Scenarios
+
+### Scenario 1: New Product - First Stock Entry
+
+**Goal**: Add a new product and initial stock
+
+**Step 1**: Create product (returns product_id: 2)
+```
+POST {{base_url}}/api/products/
+Body: {"name": "New Product", "buying_price": 100}
+```
+
+**Step 2**: Add initial stock
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 2,
+  "branch_id": 1,
+  "quantity": 200,
+  "type": "in",
+  "reason": "Initial stock"
+}
+```
+
+**Step 3**: Verify
+```
+GET {{base_url}}/api/inventory/levels?branch_id=1
+```
+
+---
+
+### Scenario 2: Customer Purchase
+
+**Goal**: Record a sale (removes stock)
+
+**Step 1**: Customer buys 5 items
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 5,
+  "type": "out",
+  "reason": "Sale to customer",
+  "notes": "Invoice #12345"
+}
+```
+
+**Step 2**: Check remaining stock
+```
+GET {{base_url}}/api/inventory/levels?branch_id=1
+```
+
+---
+
+### Scenario 3: Damaged Items
+
+**Goal**: Remove damaged stock
+
+**Step 1**: Remove damaged items
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 3,
+  "type": "out",
+  "reason": "Damaged",
+  "notes": "Water damage in warehouse"
 }
 ```
 
 ---
 
-# STEP 3: MANAGER USER - COMPLETE WALKTHROUGH
+### Scenario 4: Stock Return from Another Branch
 
-The manager can manage products and inventory but CANNOT create or delete branches or categories.
+**Goal**: Transfer stock between branches (simulated)
 
-## Step 3.1: Register Manager User
+**Step 1**: Remove from Branch A
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 20,
+  "type": "out",
+  "reason": "Transfer to Branch B"
+}
+```
 
-### How to Do It
+**Step 2**: Add to Branch B
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 1,
+  "branch_id": 2,
+  "quantity": 20,
+  "type": "in",
+  "reason": "Transfer from Branch A"
+}
+```
 
-1. POST to `{{base_url}}/api/auth/register`
-2. Body:
+---
 
+### Scenario 5: Check Low Stock
+
+**Goal**: Find products needing restock
+
+```
+GET {{base_url}}/api/inventory/low-stock?branch_id=1
+```
+
+If any products show here, they are at or below threshold!
+
+---
+
+### Scenario 6: Audit Trail Check
+
+**Goal**: See all movements for a product
+
+```
+GET {{base_url}}/api/inventory/history?product_id=1&branch_id=1&limit=100
+```
+
+This shows every stock change for that product at that branch!
+
+---
+
+## Inventory Error Cases
+
+### Error: Product Not Found
+```
+Body: {"product_id": 999, "branch_id": 1, "quantity": 10, "type": "in"}
+```
+Response:
+```json
+{"error": "Error", "message": "Product with ID '999' does not exist."}
+```
+
+### Error: Branch Not Found
+```
+Body: {"product_id": 1, "branch_id": 999, "quantity": 10, "type": "in"}
+```
+Response:
+```json
+{"error": "Error", "message": "Branch with ID '999' does not exist."}
+```
+
+### Error: Negative Quantity
+```
+Body: {"product_id": 1, "branch_id": 1, "quantity": -10, "type": "in"}
+```
+Response:
+```json
+{"error": "Error", "message": "Quantity must be a positive number."}
+```
+
+### Error: Missing Type
+```
+Body: {"product_id": 1, "branch_id": 1, "quantity": 10}
+```
+Response:
+```json
+{"error": "Error", "message": "Missing required data: type"}
+```
+
+### Error: Invalid Type
+```
+Body: {"product_id": 1, "branch_id": 1, "quantity": 10, "type": "move"}
+```
+Response:
+```json
+{"error": "Error", "message": "Transaction type must be either 'in' or 'out'."}
+```
+
+### Error: Remove More Than Available
+```
+Body: {"product_id": 1, "branch_id": 1, "quantity": 1000, "type": "out"}
+```
+Response:
+```json
+{"error": "Error", "message": "Cannot remove 1000 units. Only 132 available."}
+```
+
+### Error: Staff Cannot Do Transaction
+```
+Headers: Authorization: Bearer {{staff_token}}
+POST {{base_url}}/api/inventory/transaction
+Body: {"product_id": 1, "branch_id": 1, "quantity": 10, "type": "in"}
+```
+Response:
+```json
+{"error": "Forbidden", "message": "Access denied", "details": "Only admins and managers can record stock transactions"}
+```
+
+---
+
+## Inventory - Role Permissions Summary
+
+| Action | Admin | Manager | Staff |
+|--------|:-----:|:-------:|:------:|
+| Stock In (add) | ✓ | ✓ | ✗ |
+| Stock Out (remove) | ✓ | ✓ | ✗ |
+| View Levels | ✓ | ✓ | ✓ |
+| View Low Stock | ✓ | ✓ | ✗ |
+| View History | ✓ | ✓ | ✗ |
+
+---
+
+# SECTION 5: MANAGER USER - EVERYTHING
+
+Manager can manage products, suppliers, and inventory, but CANNOT create/delete branches or categories.
+
+## Step 5.1: Register Manager
+
+### URL
+```
+POST {{base_url}}/api/auth/register
+```
+
+### Body
 ```json
 {
   "username": "manager1",
@@ -1089,18 +1410,18 @@ The manager can manage products and inventory but CANNOT create or delete branch
 }
 ```
 
-3. Click **Send**
-4. Copy the access_token and save it as manager_token in your environment
+### Save the token as manager_token
 
 ---
 
-## Step 3.2: Login as Manager
+## Step 5.2: Login as Manager
 
-### How to Do It
+### URL
+```
+POST {{base_url}}/api/auth/login
+```
 
-1. POST to `{{base_url}}/api/auth/login`
-2. Body:
-
+### Body
 ```json
 {
   "email": "manager@example.com",
@@ -1108,227 +1429,80 @@ The manager can manage products and inventory but CANNOT create or delete branch
 }
 ```
 
-3. Click **Send**
+### Save the token as manager_token
 
 ---
 
-## Step 3.3: Manager CANNOT Create Branch
+## Manager Inventory Testing
 
-### Test This
-
-1. Try to POST to `{{base_url}}/api/branches/`
-2. Use manager_token in Authorization header
-3. Body:
-
-```json
-{
-  "name": "Manager Branch",
-  "location": "Test"
-}
+### Can Do Stock In
 ```
-
-### What You Should See
-
-```json
-{
-  "error": "Forbidden",
-  "message": "Access denied",
-  "details": "Only admins can create branches",
-  "solution": "Contact the administrator to create a new branch"
-}
-```
-
-Status: **403 Forbidden**
-
----
-
-## Step 3.4: Manager CANNOT Delete Branch
-
-### Test This
-
-1. Try to DELETE `{{base_url}}/api/branches/1` with manager token
-2. You will get 403 Forbidden
-
----
-
-## Step 3.5: Manager CANNOT Create Category
-
-### Test This
-
-1. Try to POST to `{{base_url}}/api/categories/`
-2. You will get 403 Forbidden
-
----
-
-## Step 3.6: Manager CANNOT Delete Category
-
-### Test This
-
-1. Try to DELETE `{{base_url}}/api/categories/1` with manager token
-2. You will get 403 Forbidden
-
----
-
-## Step 3.7: Manager CAN Create Product
-
-### How to Do It
-
-1. POST to `{{base_url}}/api/products/`
-2. Use manager_token
-3. Body:
-
-```json
-{
-  "name": "Manager Product",
-  "buying_price": 100,
-  "selling_price": 150,
-  "unit": "pcs",
-  "threshold": 5
-}
-```
-
-### What You Should See
-
-```json
-{
-  "data": {
-    "id": 2,
-    "name": "Manager Product",
-    "buying_price": 100,
-    "selling_price": 150,
-    ...
-  },
-  "message": "Product created successfully"
-}
-```
-
-Status: **201 Created**
-
----
-
-## Step 3.8: Manager CAN Update Product
-
-### How to Do It
-
-1. PUT to `{{base_url}}/api/products/2`
-2. Body:
-
-```json
-{
-  "name": "Manager Product Updated",
-  "buying_price": 110
-}
-```
-
-3. Click **Send**
-
----
-
-## Step 3.9: Manager CANNOT Delete Product
-
-### Test This
-
-1. Try to DELETE `{{base_url}}/api/products/2` with manager token
-2. You will get 403 Forbidden
-
----
-
-## Step 3.10: Manager CAN Create Supplier
-
-### How to Do It
-
-1. POST to `{{base_url}}/api/suppliers/`
-2. Body:
-
-```json
-{
-  "name": "Manager Supplier",
-  "email": "supplier@manager.com",
-  "phone": "1234567890"
-}
-```
-
-3. Click **Send**
-
----
-
-## Step 3.11: Manager CAN Update Supplier
-
-### How to Do It
-
-1. PUT `{{base_url}}/api/suppliers/2`
-2. Click **Send**
-
----
-
-## Step 3.12: Manager CANNOT Delete Supplier
-
-### Test This
-
-1. Try DELETE `{{base_url}}/api/suppliers/2` with manager token
-2. You will get 403 Forbidden
-
----
-
-## Step 3.13: Manager CAN Do Stock Transactions
-
-### How to Do It
-
-1. POST to `{{base_url}}/api/inventory/transaction`
-2. Body:
-
-```json
-{
+POST {{base_url}}/api/inventory/transaction
+Headers: Manager token
+Body: {
   "product_id": 1,
   "branch_id": 1,
-  "quantity": 50,
+  "quantity": 25,
   "type": "in",
   "reason": "Manager adding stock"
 }
 ```
+✅ Works - Status 201
 
-3. Click **Send**
+### Can Do Stock Out
+```
+POST {{base_url}}/api/inventory/transaction
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 5,
+  "type": "out",
+  "reason": "Manager sale"
+}
+```
+✅ Works - Status 201
+
+### Can View Stock Levels
+```
+GET {{base_url}}/api/inventory/levels?branch_id=1
+```
+✅ Works - Status 200
+
+### Can View Low Stock
+```
+GET {{base_url}}/api/inventory/low-stock?branch_id=1
+```
+✅ Works - Status 200
+
+### Can View History
+```
+GET {{base_url}}/api/inventory/history?product_id=1&branch_id=1
+```
+✅ Works - Status 200
 
 ---
 
-## Step 3.14: Manager CAN View Stock Levels
+## Manager Inventory - Cannot Do
 
-### How to Do It
-
-1. GET `{{base_url}}/api/inventory/levels`
-2. Click **Send**
+### Cannot View Transaction History
+Actually YES, manager CAN view history.
 
 ---
 
-## Step 3.15: Manager CAN View Low Stock
+# SECTION 6: STAFF USER - EVERYTHING
 
-### How to Do It
+Staff has the least permissions - mostly read-only access.
 
-1. GET `{{base_url}}/api/inventory/low-stock`
-2. Click **Send**
+Staff has the least permissions - mostly read-only access.
 
----
+## Step 6.1: Register Staff
 
-## Step 3.16: Manager CAN View Transaction History
+### URL
+```
+POST {{base_url}}/api/auth/register
+```
 
-### How to Do It
-
-1. GET `{{base_url}}/api/inventory/history`
-2. Click **Send**
-
----
-
-# STEP 4: STAFF USER - COMPLETE WALKTHROUGH
-
-The staff user has the LEAST permissions - mostly read-only access.
-
-## Step 4.1: Register Staff User
-
-### How to Do It
-
-1. POST to `{{base_url}}/api/auth/register`
-2. Body:
-
+### Body
 ```json
 {
   "username": "staff1",
@@ -1340,18 +1514,18 @@ The staff user has the LEAST permissions - mostly read-only access.
 }
 ```
 
-3. Click **Send**
-4. Copy the access_token and save it as staff_token
+### Save the token as staff_token
 
 ---
 
-## Step 4.2: Login as Staff
+## Step 6.2: Login as Staff
 
-### How to Do It
+### URL
+```
+POST {{base_url}}/api/auth/login
+```
 
-1. POST to `{{base_url}}/api/auth/login`
-2. Body:
-
+### Body
 ```json
 {
   "email": "staff@example.com",
@@ -1359,238 +1533,320 @@ The staff user has the LEAST permissions - mostly read-only access.
 }
 ```
 
-3. Click **Send**
+---
+
+## Step 6.3: What Staff CAN Do
+
+### Can View Stock Levels
+```
+GET {{base_url}}/api/inventory/levels?branch_id=1
+Headers: staff_token
+```
+✅ Works - Status 200
 
 ---
 
-## Step 4.3: Staff CAN View Branches
+## Step 6.4: What Staff CANNOT Do (Inventory)
 
-### How to Do It
+### CANNOT Do Stock In (Add Stock)
+```
+POST {{base_url}}/api/inventory/transaction
+Headers: staff_token
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 10,
+  "type": "in"
+}
+```
+❌ 403 Forbidden - "Only admins and managers can record stock transactions"
 
-1. GET `{{base_url}}/api/branches/` with staff_token
-2. Click **Send**
+### CANNOT Do Stock Out (Remove Stock)
+```
+POST {{base_url}}/api/inventory/transaction
+Headers: staff_token
+Body: {
+  "product_id": 1,
+  "branch_id": 1,
+  "quantity": 5,
+  "type": "out"
+}
+```
+❌ 403 Forbidden
 
----
+### CANNOT View Low Stock Alerts
+```
+GET {{base_url}}/api/inventory/low-stock?branch_id=1
+Headers: staff_token
+```
+❌ 403 Forbidden
 
-## Step 4.4: Staff CANNOT Create Branch
-
-### Test This
-
-1. Try POST to `{{base_url}}/api/branches/` with staff_token
-2. You will get 403 Forbidden
-
----
-
-## Step 4.5: Staff CAN View Products
-
-### How to Do It
-
-1. GET `{{base_url}}/api/products/` with staff_token
-2. Click **Send**
-
----
-
-## Step 4.6: Staff CANNOT Create Product
-
-### Test This
-
-1. Try POST to `{{base_url}}/api/products/` with staff_token
-2. You will get 403 Forbidden
-
----
-
-## Step 4.7: Staff CANNOT Do Stock Transactions
-
-### Test This
-
-1. Try POST to `{{base_url}}/api/inventory/transaction` with staff_token
-2. You will get 403 Forbidden
-
----
-
-## Step 4.8: Staff CAN View Stock Levels
-
-### How to Do It
-
-1. GET `{{base_url}}/api/inventory/levels` with staff_token
-2. Click **Send**
+### CANNOT View Transaction History
+```
+GET {{base_url}}/api/inventory/history?product_id=1&branch_id=1
+Headers: staff_token
+```
+❌ 403 Forbidden
 
 ---
 
-## Step 4.9: Staff CANNOT View Low Stock
+# SECTION 7: TESTING ALL ENDPOINTS
 
-### Test This
+## Complete Endpoint Reference Table
 
-1. Try GET `{{base_url}}/api/inventory/low-stock` with staff_token
-2. You will get 403 Forbidden
+### Authentication Endpoints
 
----
+| Method | URL | Auth Required? | Body Required | Success Status |
+|--------|-----|---------------|--------------|---------------|---------------|
+| POST | /api/auth/register | No | username, first_name, last_name, email, password, role | 201 |
+| POST | /api/auth/login | No | email, password | 200 |
+| GET | /api/auth/me | Yes (JWT) | - | 200 |
+| POST | /api/auth/refresh-token | Yes (JWT) | - | 200 |
 
-## Step 4.10: Staff CANNOT View Transaction History
+### Branch Endpoints
 
-### Test This
+| Method | URL | Who Can Use | Body Required | Success Status |
+|--------|-----|------------|--------------|---------------|
+| GET | /api/branches/ | All users | - | 200 |
+| POST | /api/branches/ | Admin only | name (required), location, phone | 201 |
+| GET | /api/branches/{id} | All users | - | 200 |
+| PUT | /api/branches/{id} | Admin only | name, location, phone | 200 |
+| DELETE | /api/branches/{id} | Admin only | - | 200 |
 
-1. Try GET `{{base_url}}/api/inventory/history` with staff_token
-2. You will get 403 Forbidden
+### Category Endpoints
 
----
+| Method | URL | Who Can Use | Body Required | Success Status |
+|--------|-----|------------|--------------|---------------|
+| GET | /api/categories/ | All users | - | 200 |
+| POST | /api/categories/ | Admin only | name (required), description | 201 |
+| GET | /api/categories/{id} | All users | - | 200 |
+| PUT | /api/categories/{id} | Admin only | name, description | 200 |
+| DELETE | /api/categories/{id} | Admin only | - | 200 |
 
-# STEP 5: TESTING BRANCHES
+### Product Endpoints
 
-## Complete Branch Test Table for Admin
+| Method | URL | Who Can Use | Body Required | Success Status |
+|--------|-----|------------|--------------|---------------|
+| GET | /api/products/ | All users | Query: page, per_page, search | 200 |
+| POST | /api/products/ | Admin, Manager | name, buying_price (required) | 201 |
+| GET | /api/products/{id} | All users | - | 200 |
+| PUT | /api/products/{id} | Admin, Manager | name, prices, etc. | 200 |
+| DELETE | /api/products/{id} | Admin only | - | 200 |
 
-| Action | Method | URL | Token | Body | Success Status |
-|--------|--------|-----|-------|-------|------|-------------|
-| Create branch | POST | /api/branches/ | admin | {"name":"Branch","location":"City"} | 201 |
-| Get all branches | GET | /api/branches/ | admin | - | 200 |
-| Get branch by ID | GET | /api/branches/1 | admin | - | 200 |
-| Update branch | PUT | /api/branches/1 | admin | {"name":"New"} | 200 |
-| Delete branch | DELETE | /api/branches/1 | admin | - | 200 |
+### Supplier Endpoints
 
----
+| Method | URL | Who Can Use | Body Required | Success Status |
+|--------|-----|------------|--------------|---------------|
+| GET | /api/suppliers/ | All users | - | 200 |
+| POST | /api/suppliers/ | Admin, Manager | name (required), email, phone | 201 |
+| GET | /api/suppliers/{id} | All users | - | 200 |
+| PUT | /api/suppliers/{id} | Admin, Manager | name, email, phone | 200 |
+| DELETE | /api/suppliers/{id} | Admin only | - | 200 |
 
-# STEP 6: TESTING CATEGORIES
+### Inventory Endpoints
 
-## Complete Category Test Table
-
-| Action | Method | URL | Token | Body | Success Status |
-|--------|--------|-----|-------|-------|-------------|
-| Create category | POST | /api/categories/ | admin | {"name":"Cat","desc":"Desc"} | 201 |
-| Get all categories | GET | /api/categories/ | admin | - | 200 |
-| Get category by ID | GET | /api/categories/1 | admin | - | 200 |
-| Update category | PUT | /api/categories/1 | admin | {"name":"New"} | 200 |
-| Delete category | DELETE | /api/categories/1 | admin | - | 200 |
-
----
-
-# STEP 7: TESTING PRODUCTS
-
-## Complete Product Test Table
-
-| Action | Method | URL | Token | Body | Success Status |
-|--------|--------|-----|-------|-------|-------------|
-| Create product | POST | /api/products/ | admin/manager | {"name":"Prod","price":50} | 201 |
-| Get all products | GET | /api/products/ | any | - | 200 |
-| Search products | GET | /api/products/?search=name | any | - | 200 |
-| Get product by ID | GET | /api/products/1 | any | - | 200 |
-| Update product | PUT | /api/products/1 | admin/manager | {"name":"New"} | 200 |
-| Delete product | DELETE | /api/products/1 | admin | - | 200 |
-
----
-
-# STEP 8: TESTING SUPPLIERS
-
-## Complete Supplier Test Table
-
-| Action | Method | URL | Token | Body | Success Status |
-|--------|--------|-----|-------|-------|-------------|
-| Create supplier | POST | /api/suppliers/ | admin/manager | {"name":"Sup","email":"a@b"} | 201 |
-| Get all suppliers | GET | /api/suppliers/ | any | - | 200 |
-| Get supplier by ID | GET | /api/suppliers/1 | any | - | 200 |
-| Update supplier | PUT | /api/suppliers/1 | admin/manager | {"name":"New"} | 200 |
-| Delete supplier | DELETE | /api/suppliers/1 | admin | - | 200 |
+| Method | URL | Who Can Use | Body Required | Success Status |
+|--------|-----|------------|--------------|---------------|
+| POST | /api/inventory/transaction | Admin, Manager | product_id, branch_id, quantity, type (in/out) | 201 |
+| GET | /api/inventory/levels | All users | Query: branch_id (optional) | 200 |
+| GET | /api/inventory/low-stock | Admin, Manager | Query: branch_id (optional) | 200 |
+| GET | /api/inventory/history | Admin, Manager | Query: product_id, branch_id, limit | 200 |
 
 ---
 
-# STEP 9: TESTING INVENTORY
+# SECTION 8: COMPLETE ROLE PERMISSIONS TABLE
 
-## Complete Inventory Test Table
-
-| Action | Method | URL | Token | Body | Success Status |
-|--------|--------|-----|-------|-------|-------------|
-| Add stock (in) | POST | /api/inventory/transaction | admin/manager | {"pid":1,"bid":1,"qty":100,"type":"in"} | 201 |
-| Remove stock (out) | POST | /api/inventory/transaction | admin/manager | {"pid":1,"bid":1,"qty":10,"type":"out"} | 201 |
-| Get stock levels | GET | /api/inventory/levels?branch_id=1 | any | - | 200 |
-| Get low stock | GET | /api/inventory/low-stock?branch_id=1 | admin/manager | - | 200 |
-| Get history | GET | /api/inventory/history?pid=1&bid=1 | admin/manager | - | 200 |
+| Action | Admin | Manager | Staff |
+|--------|:-----:|:-------:|:------:|
+| **Branches** | | | |
+| View branches | ✓ | ✓ | ✓ |
+| Create branch | ✓ | ✗ | ✗ |
+| Update branch | ✓ | ✗ | ✗ |
+| Delete branch | ✓ | ✗ | ✗ |
+| **Categories** | | | |
+| View categories | ✓ | ✓ | ✓ |
+| Create category | ✓ | ✗ | ✗ |
+| Update category | ✓ | ✗ | ✗ |
+| Delete category | ✓ | ✗ | ✗ |
+| **Products** | | | |
+| View products | ✓ | ✓ | ✓ |
+| Create product | ✓ | ✓ | ✗ |
+| Update product | ✓ | ✓ | ✗ |
+| Delete product | ✓ | ✗ | ✗ |
+| **Suppliers** | | | |
+| View suppliers | ✓ | ✓ | ✓ |
+| Create supplier | ✓ | ✓ | ✗ |
+| Update supplier | ✓ | ✓ | ✗ |
+| Delete supplier | ✓ | ✗ | ✗ |
+| **Inventory** | | | |
+| View stock levels | ✓ | ✓ | ✓ |
+| Stock in (add) | ✓ | ✓ | ✗ |
+| Stock out (remove) | ✓ | ✓ | ✗ |
+| View low stock | ✓ | ✓ | ✗ |
+| View history | ✓ | ✓ | ✗ |
 
 ---
 
-# STEP 10: COMMON ERRORS AND HOW TO FIX THEM
+# SECTION 9: COMMON ERRORS AND FIXES
 
 ## Error 1: 422 Unprocessable Entity
 
 ### Cause
-The request body is empty or not valid JSON.
+Request body is empty or not valid JSON.
 
-### Fix
-1. Go to Body tab
-2. Select **raw**
-3. Make sure **JSON** is selected in the dropdown (not Text)
+### Fix Step by Step
+1. Click **Body** tab
+2. Select **raw** radio button
+3. In the dropdown, select **JSON** (not Text)
 4. Enter valid JSON in the text area
+5. Make sure all JSON syntax is correct (commas, quotes)
 
 ---
 
-## Error 2: 401 Unauthorized
+## Error 2: 401 Unauthorized - "No JWT token was provided"
 
 ### Cause
-No token provided or token expired.
+No Authorization header or it's missing.
 
-### Fix
-1. Go to Headers tab
-2. Make sure Authorization header exists
-3. Make sure token is correct (not expired)
-4. Re-login to get a fresh token
+### Fix Step by Step
+1. Click **Headers** tab
+2. Check if "Authorization" header exists
+3. If not, add it:
+   - Key: `Authorization`
+   - Value: `Bearer {{admin_token}}`
+4. Make sure the checkbox is checked
 
 ---
 
-## Error 3: 403 Forbidden
+## Error 3: 401 Unauthorized - "Token has expired"
 
 ### Cause
-User role doesn't have permission.
+Token is older than 1 hour.
 
-### Fix
-1. You are trying an action your role cannot do
-2. Use an admin account for that action
-3. Or accept that your role cannot do that action
+### Fix Step by Step
+1. POST to `/api/auth/login`
+2. Use email and password
+3. Copy the new access_token
+4. Update your environment variable
+5. Click Save
 
 ---
 
-## Error 4: 404 Not Found
+## Error 4: 403 Forbidden - "Access denied"
 
 ### Cause
-Wrong URL or resource doesn't exist.
+Your role doesn't have permission for this action.
 
-### Fix
+### Possible Causes
+- You're logged in as staff but trying to create a branch
+- You're logged in as manager but trying to delete something
+
+### Fix Step by Step
+1. Login with an admin account
+2. Copy the admin_token
+3. Use that token for the request
+
+---
+
+## Error 5: 404 Not Found - "Route not found"
+
+### Cause
+Wrong URL or endpoint doesn't exist.
+
+### Fix Step by Step
 1. Check the URL is correct
-2. Check the resource ID exists
+2. Check spelling
+3. Make sure you're using the right HTTP method (GET, POST, PUT, DELETE)
 
 ---
 
-## Error 5: 400 Bad Request
+## Error 6: 400 Bad Request - "Missing required fields"
 
 ### Cause
-Missing required fields.
+Required fields not in request body.
 
-### Fix
+### Fix Step by Step
 1. Read the error message
-2. Add the required fields to the body
+2. Add the missing fields to your JSON body
 3. Check field names are correct
 
 ---
 
-# QUICK REFERENCE: ROLE PERMISSIONS
+## Error 7: 400 Bad Request - "Validation Error"
 
-| Action | Admin | Manager | Staff |
-|--------|:-----:|:-------:|:------:|
-| Create Branch | ✓ | ✗ | ✗ |
-| Delete Branch | ✓ | ✗ | ✗ |
-| View Branch | ✓ | ✓ | ✓ |
-| Create Category | ✓ | ✗ | ✗ |
-| Delete Category | ✓ | ✗ | ✗ |
-| View Category | ✓ | ✓ | ✓ |
-| Create Product | ✓ | ✓ | ✗ |
-| Update Product | ✓ | ✓ | ✗ |
-| Delete Product | ✓ | ✗ | ✗ |
-| View Product | ✓ | ✓ | ✓ |
-| Create Supplier | ✓ | ✓ | ✗ |
-| Delete Supplier | ✓ | ✗ | ✗ |
-| View Supplier | ✓ | ✓ | ✓ |
-| Stock In/Out | ✓ | ✓ | ✗ |
-| View Stock Levels | ✓ | ✓ | ✓ |
-| View Low Stock | ✓ | ✓ | ✗ |
-| View History | ✓ | ✓ | ✗ |
+### Cause
+Invalid data in request body.
+
+### Fix Step by Step
+1. Check the details in the response
+2. Fix the data format
+3. Example: "buying_price is required" - add buying_price to body
 
 ---
 
-# END OF DETAILED POSTMAN GUIDE
+# SECTION 10: QUICK REFERENCE
+
+## How to Test (Quick Steps)
+
+### 1. Always Start Server
+```bash
+python3 run.py
+```
+
+### 2. Register First User (Admin)
+- POST /api/auth/register with role: "admin"
+
+### 3. Login to Get Token
+- POST /api/auth/login
+
+### 4. Copy Token
+- Go to Environment → Paste to admin_token → Save
+
+### 5. Test Protected Endpoints
+- Add Headers: Authorization: Bearer {{admin_token}}
+
+---
+
+## Token Flow Summary
+
+```
+Register → Get Token → Save Token → Use Token in Headers → (1 hour later) → Login Again → Get New Token
+```
+
+---
+
+## Headers Checklist (Every Request)
+
+Before clicking Send, verify:
+
+- [ ] Content-Type: application/json
+- [ ] Authorization: Bearer {{token}}
+- [ ] Checkbox is checked for both
+
+---
+
+## Body Checklist (For POST/PUT)
+
+- [ ] Body tab selected
+- [ ] raw selected
+- [ ] JSON selected in dropdown
+- [ ] Valid JSON in text area
+
+---
+
+## Quick Test Order
+
+1. Register admin → get admin_token
+2. Login → get fresh token
+3. Create branch → save branch_id
+4. Create category → save category_id
+5. Create supplier → save supplier_id
+6. Create product → save product_id
+7. Stock in
+8. Stock out
+9. View levels
+10. View history
+
+---
+
+# END OF COMPREHENSIVE GUIDE
