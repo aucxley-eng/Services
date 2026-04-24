@@ -1,7 +1,7 @@
 from flask import Blueprint
-from services import DashboardService
-from middleware import require_auth
-from responses import APIResponse
+from app.dashboard.service import DashboardService
+from app.auth.middleware import require_auth
+from app.api_response import APIResponse
 
 dashboard_bp = Blueprint('dashboard', __name__)
 

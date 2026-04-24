@@ -1,7 +1,7 @@
 from functools import wraps
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
-from services import AuthService
-from responses import APIResponse
+from app.auth.service import AuthService
+from app.api_response import APIResponse
 
 
 def require_auth(roles=None):
